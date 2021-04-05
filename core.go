@@ -36,12 +36,13 @@ type Option struct {
 
 // type CLI may or may not contain accessible attributes in the future
 type CLI struct {
-	Liner    liner.State
-	Options  map[string]Option
-	Default  Option
-	Greeting string
-	looping  bool
-	longest  int
+	Liner       liner.State
+	Options     map[string]Option
+	OrderedKeys []string
+	Default     Option
+	Greeting    string
+	looping     bool
+	longest     int
 }
 
 // AddOption registers a command (cmd), appropriate documentation string (help) and callback function with the CLI
@@ -52,6 +53,7 @@ func (cli *CLI) AddOption(cmd string, help string, function func(args []string) 
 		return errors.New("cmd string can not contain white spaces")
 	}
 	cli.Options[cmd] = Option{cmd, help, function}
+	cli.OrderedKeys = append(cli.OrderedKeys, cmd)
 	// need this for pretty printing the help message
 	if cli.longest < len(cmd) {
 		cli.longest = len(cmd)
@@ -91,7 +93,8 @@ func (cli *CLI) Loop(prompt string) {
 // It is meant to be used as the callback of a registered "help" Option
 func (cli *CLI) Help(args []string) string {
 	var result string
-	for cmd, option := range cli.Options {
+	for _, cmd := range cli.OrderedKeys {
+		option := cli.Options[cmd]
 		if len(option.Help) > 0 {
 			fmt.Printf("%"+fmt.Sprintf("%d", cli.longest)+"s  -  %s\n", cmd, option.Help)
 		}
@@ -109,7 +112,7 @@ func (cli *CLI) Exit(args []string) string {
 
 // MkCLI returns new CLI
 func MkCLI(greeting string) CLI {
-	tmp := CLI{*liner.NewLiner(), make(map[string]Option), Option{}, greeting, true, 0}
+	tmp := CLI{*liner.NewLiner(), make(map[string]Option), make([]string, 0), Option{}, greeting, true, 0}
 	tmp.Liner.SetCompleter(func(line string) []string {
 		tokens := strings.Split(line, " ")
 		// first word is already a valid command
