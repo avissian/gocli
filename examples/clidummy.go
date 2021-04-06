@@ -27,7 +27,7 @@ func main() {
 	// demonstrate argument passing
 	cli.AddOption("quote", "qotes all arguments", func(args []string) string {
 		res := ""
-		for i, arg := range args {
+		for i, arg := range args[1:] {
 			if i != 0 {
 				res += " "
 			}

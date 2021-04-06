@@ -79,7 +79,7 @@ func (cli *CLI) Loop(prompt string) {
 			tmp := strings.Split(cmd, " ")
 			if option, ok := cli.Options[tmp[0]]; ok {
 				cli.Liner.AppendHistory(cmd)
-				fmt.Println(option.Function(tmp[1:]))
+				fmt.Println(option.Function(tmp))
 			} else {
 				if cli.Default.Function != nil {
 					fmt.Println(cli.Default.Function(tmp))
