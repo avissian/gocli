@@ -23,8 +23,10 @@ package gocli
 import (
 	"errors"
 	"fmt"
-	"github.com/peterh/liner"
 	"strings"
+	"unicode/utf8"
+
+	"github.com/peterh/liner"
 )
 
 // type Option may or may not contain accessible attributes in the future
@@ -55,8 +57,8 @@ func (cli *CLI) AddOption(cmd string, help string, function func(args []string) 
 	cli.Options[cmd] = Option{cmd, help, function}
 	cli.OrderedKeys = append(cli.OrderedKeys, cmd)
 	// need this for pretty printing the help message
-	if cli.longest < len(cmd) {
-		cli.longest = len(cmd)
+	if cli.longest < utf8.RuneCountInString(cmd) {
+		cli.longest = utf8.RuneCountInString(cmd)
 	}
 	return nil
 }
