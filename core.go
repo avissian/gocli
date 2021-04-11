@@ -45,6 +45,7 @@ type CLI struct {
 	Greeting    string
 	looping     bool
 	longest     int
+	longestHelp int
 }
 
 // AddOption registers a command (cmd), appropriate documentation string (help) and callback function with the CLI
@@ -60,7 +61,15 @@ func (cli *CLI) AddOption(cmd string, help string, function func(args []string) 
 	if cli.longest < utf8.RuneCountInString(cmd) {
 		cli.longest = utf8.RuneCountInString(cmd)
 	}
+
+	if cli.longestHelp < utf8.RuneCountInString(help) {
+		cli.longestHelp = utf8.RuneCountInString(help)
+	}
 	return nil
+}
+
+func (cli *CLI) AddSeparator() {
+	cli.OrderedKeys = append(cli.OrderedKeys, "---")
 }
 
 // Register callback to process the (white-space split) cmdline that could not be parsed
@@ -72,6 +81,7 @@ func (cli *CLI) DefaultOption(function func(args []string) string) {
 func (cli *CLI) Loop(prompt string) {
 	cli.looping = true
 	fmt.Println(cli.Greeting)
+	cli.Help(nil)
 	for cli.looping {
 		cmd, err := cli.Liner.Prompt(prompt)
 		if err != nil {
@@ -96,9 +106,19 @@ func (cli *CLI) Loop(prompt string) {
 func (cli *CLI) Help(args []string) string {
 	var result string
 	for _, cmd := range cli.OrderedKeys {
-		option := cli.Options[cmd]
-		if len(option.Help) > 0 {
-			fmt.Printf("%"+fmt.Sprintf("%d", cli.longest)+"s  -  %s\n", cmd, option.Help)
+		option, ok := cli.Options[cmd]
+		if ok {
+			if len(option.Help) > 0 {
+				fmt.Printf("%"+fmt.Sprintf("%d", cli.longest)+"s  -  %s\n", cmd, option.Help)
+			}
+		} else {
+			// separator
+			consoleLen := 79 // New line takes up space too, default win console - 80 chars
+			stringLen := cli.longest + cli.longestHelp + 5
+			if consoleLen < stringLen {
+				stringLen = consoleLen
+			}
+			fmt.Printf("%s\n", strings.Repeat("_", stringLen))
 		}
 	}
 	return result
@@ -114,7 +134,7 @@ func (cli *CLI) Exit(args []string) string {
 
 // MkCLI returns new CLI
 func MkCLI(greeting string) CLI {
-	tmp := CLI{*liner.NewLiner(), make(map[string]Option), make([]string, 0), Option{}, greeting, true, 0}
+	tmp := CLI{*liner.NewLiner(), make(map[string]Option), make([]string, 0), Option{}, greeting, true, 0, 0}
 	tmp.Liner.SetCompleter(func(line string) []string {
 		tokens := strings.Split(line, " ")
 		// first word is already a valid command
