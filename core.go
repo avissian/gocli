@@ -80,7 +80,6 @@ func (cli *CLI) DefaultOption(function func(args []string) string) {
 // Loop is a REPL-inspired loop, prompting for input and running the registered callbacks
 func (cli *CLI) Loop(prompt string) {
 	cli.looping = true
-	fmt.Println(cli.Greeting)
 	cli.Help(nil)
 	for cli.looping {
 		cmd, err := cli.Liner.Prompt(prompt)
@@ -103,8 +102,8 @@ func (cli *CLI) Loop(prompt string) {
 
 // Help returns a documentation string about all registered Options.
 // It is meant to be used as the callback of a registered "help" Option
-func (cli *CLI) Help(args []string) string {
-	var result string
+func (cli *CLI) Help(args []string) (_ string) {
+	fmt.Println(cli.Greeting)
 	for _, cmd := range cli.OrderedKeys {
 		option, ok := cli.Options[cmd]
 		if ok {
@@ -121,7 +120,7 @@ func (cli *CLI) Help(args []string) string {
 			fmt.Printf("%s\n", strings.Repeat("_", stringLen))
 		}
 	}
-	return result
+	return
 }
 
 // Exit terminates the loop, returning a concatenation of all string arguments
